@@ -13,6 +13,7 @@ class GrpcClientFactory {
      * Esse método cria o blocking stub que será o client
      */
     @Singleton // indica para o micronaut que o método será gerenciado por ele
+    // @GrpcChannel deixa com que o micronaut gere o channel, confs vem do yaml
     fun fretesClientStub(@GrpcChannel("fretes") channel: ManagedChannel): FretesServiceGrpc.FretesServiceBlockingStub? {
         return FretesServiceGrpc.newBlockingStub(channel) // retorna um client
     }
