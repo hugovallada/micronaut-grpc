@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "com.github.hugovallada";
+option java_outer_classname = "Fretes";
+option objc_class_prefix = "HLW";
+
+package com.github.hugovallada;
+
+service FretesService {
+  rpc send (FretesRequest) returns (FretesReply) {}
+
+  rpc calculaFrete (CalculaFreteRequest) returns (CalculaFreteResponse){} // indica o método que será usado para calcular o Frete
+}
+
+message CalculaFreteRequest { // Cria a representação da classe de request, no grpc é chamado de message
+   string cep = 1; // define o tipo, o nome da variável e a posição dela, já q o protoc não nomeia, apenas guarda a posição
+}
+
+message CalculaFreteResponse{ // Cria a representação da classe de response, no grpc é chamado de message
+  double valor = 1;
+  string cep = 2;
+}
+
+message FretesRequest {
+  string name = 1;
+}
+
+message FretesReply {
+  string message = 1;
+}
