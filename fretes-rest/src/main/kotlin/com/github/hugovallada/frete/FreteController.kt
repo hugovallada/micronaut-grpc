@@ -35,24 +35,21 @@ class FreteController(@Inject private val gRpcClient: FretesServiceGrpc.FretesSe
             val statusCode = e.status.code // pega o code dentro do Status
 
             // Você deve sempre mapear o erro grpc para um erro REST
-            if(statusCode == Status.Code.INVALID_ARGUMENT) {
-                throw HttpStatusException(HttpStatus.BAD_REQUEST,description) // retorna o erro para um erro similar no Http
-            }
+            when(statusCode) {
+                Status.Code.INVALID_ARGUMENT -> throw HttpStatusException(HttpStatus.BAD_REQUEST,description) // retorna o erro para um erro similar no Http
+                Status.Code.PERMISSION_DENIED -> {
+                    val statusProto = StatusProto.fromThrowable(e) // pega o Status Proto que foi usado para ter o ErroDetails
+                    if(statusProto == null) {
+                        throw HttpStatusException(HttpStatus.FORBIDDEN, description) // se não existir, trata como um erro normal
+                    }
 
-            if(statusCode == Status.Code.PERMISSION_DENIED) {
-                val statusProto = StatusProto.fromThrowable(e) // pega o Status Proto que foi usado para ter o ErroDetails
-                if(statusProto == null) {
-                    throw HttpStatusException(HttpStatus.FORBIDDEN, description) // se não existir, trata como um erro normal
+                    val anyDetails: Any = statusProto.detailsList.get(0) // pega o primeiro valor extra adicionado na lista
+                    val errorDetails = anyDetails.unpack(ErrorDetails::class.java) // desempacota para a classe customizada
+
+                    throw HttpStatusException(HttpStatus.FORBIDDEN, "${errorDetails.code} : ${errorDetails.message}")
                 }
-
-                val anyDetails: Any = statusProto.detailsList.get(0) // pega o primeiro valor extra adicionado na lista
-                val errorDetails = anyDetails.unpack(ErrorDetails::class.java) // desempacota para a classe customizada
-
-                throw HttpStatusException(HttpStatus.FORBIDDEN, "${errorDetails.code} : ${errorDetails.message}")
+                else ->  throw HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.message)  // Uma opção é usar o controller advice para ter um retorno melhor
             }
-
-            // Uma opção é usar o controller advice para ter um retorno melhor
-            throw HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.message)
         }
     }
 
