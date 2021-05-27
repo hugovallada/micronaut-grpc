@@ -17,6 +17,7 @@ repositories {
 }
 
 micronaut {
+    runtime("netty") // indica ao gradle/micronaut que deve usar um server http ao invés de grpc
     testRuntime("junit5")
     processing {
         incremental(true)
@@ -26,7 +27,7 @@ micronaut {
 
 dependencies {
     implementation("io.micronaut:micronaut-runtime")
-    implementation("io.micronaut.grpc:micronaut-grpc-runtime")
+    implementation("io.micronaut.grpc:micronaut-grpc-client-runtime") // substitui o server grpc por um client
     implementation("io.micronaut.kotlin:micronaut-kotlin-runtime")
     implementation("javax.annotation:javax.annotation-api")
     implementation("org.jetbrains.kotlin:kotlin-reflect:${kotlinVersion}")
