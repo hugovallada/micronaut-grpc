@@ -1,12 +1,11 @@
 package com.github.hugovallada
 
+import com.google.protobuf.Any
+import com.google.rpc.Code
 import io.grpc.Status
-import io.grpc.StatusRuntimeException
+import io.grpc.protobuf.StatusProto
 import io.grpc.stub.StreamObserver
 import org.slf4j.LoggerFactory
-import java.lang.Exception
-import java.lang.IllegalArgumentException
-import java.lang.IllegalStateException
 import javax.inject.Singleton
 import kotlin.random.Random
 
@@ -32,7 +31,7 @@ class FreteGrpcServer : FretesServiceGrpc.FretesServiceImplBase() { // herda da 
         }
 
 
-        if(!cep!!.matches("[0-9]{5}-[0-9]{3}".toRegex())){
+        if (!cep!!.matches("[0-9]{5}-[0-9]{3}".toRegex())) {
             Status.INVALID_ARGUMENT // adiciona o status do erro
                 .withDescription("O cep é inválido") // adiciona a descrição do erro
                 .augmentDescription("O formato esperado é XXXXX-XXX") // adiciona uma descrição adicional
@@ -42,11 +41,30 @@ class FreteGrpcServer : FretesServiceGrpc.FretesServiceImplBase() { // herda da 
                 }
         }
 
+        // SIMULAR uma verificação de segurança
+        if (cep.endsWith("333")) {
+            val statusProto = com.google.rpc.Status.newBuilder()
+                .setCode(Code.PERMISSION_DENIED.number)
+                .setMessage("Usuário não pode acessar esse recurso")
+                .addDetails(
+                    Any.pack( // O Any é uma classe do protobuf que pode empacotar qualquer tipo
+                        ErrorDetails.newBuilder()
+                            .setCode(401)
+                            .setMessage("token expirado")
+                            .build()
+                    )
+                )
+                .build()
+
+            val e = StatusProto.toStatusRuntimeException(statusProto)
+            responseObserver?.onError(e)
+        }
+
         var valor = 0.0
         try {
             valor = Random.nextDouble(from = 0.0, until = 150.00)
-            if(valor > 100) throw IllegalStateException("Erro inesperado")
-        }catch (e: Exception) {
+            if (valor > 100) throw IllegalStateException("Erro inesperado")
+        } catch (e: Exception) {
             Status.INTERNAL
                 .withDescription(e.message)
                 .withCause(e.cause) // manda a causa, mas apenas para  server, não retorna para o client
@@ -57,7 +75,7 @@ class FreteGrpcServer : FretesServiceGrpc.FretesServiceImplBase() { // herda da 
 
 
         val response = CalculaFreteResponse.newBuilder() // grpc usa muito o builder
-            .setCep(request?.cep)
+            .setCep(request.cep)
             .setValor(valor)
             .build()
 
