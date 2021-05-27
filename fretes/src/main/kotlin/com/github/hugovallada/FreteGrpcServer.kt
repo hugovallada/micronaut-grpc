@@ -1,6 +1,7 @@
 package com.github.hugovallada
 
 import com.google.protobuf.Any
+import com.google.rpc.BadRequest
 import com.google.rpc.Code
 import io.grpc.Status
 import io.grpc.protobuf.StatusProto
@@ -46,9 +47,9 @@ class FreteGrpcServer : FretesServiceGrpc.FretesServiceImplBase() { // herda da 
             val statusProto = com.google.rpc.Status.newBuilder()
                 .setCode(Code.PERMISSION_DENIED.number)
                 .setMessage("Usuário não pode acessar esse recurso")
-                .addDetails(
+                .addDetails( // Adiciona erros customizados
                     Any.pack( // O Any é uma classe do protobuf que pode empacotar qualquer tipo
-                        ErrorDetails.newBuilder()
+                        ErrorDetails.newBuilder() // O Google ja tem alguns detalhes de erros a serem usados : https://cloud.google.com/apis/design/errors
                             .setCode(401)
                             .setMessage("token expirado")
                             .build()
