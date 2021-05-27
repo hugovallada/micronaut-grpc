@@ -4,7 +4,9 @@ import io.grpc.Status
 import io.grpc.StatusRuntimeException
 import io.grpc.stub.StreamObserver
 import org.slf4j.LoggerFactory
+import java.lang.Exception
 import java.lang.IllegalArgumentException
+import java.lang.IllegalStateException
 import javax.inject.Singleton
 import kotlin.random.Random
 
@@ -40,10 +42,23 @@ class FreteGrpcServer : FretesServiceGrpc.FretesServiceImplBase() { // herda da 
                 }
         }
 
+        var valor = 0.0
+        try {
+            valor = Random.nextDouble(from = 0.0, until = 150.00)
+            if(valor > 100) throw IllegalStateException("Erro inesperado")
+        }catch (e: Exception) {
+            Status.INTERNAL
+                .withDescription(e.message)
+                .withCause(e.cause) // manda a causa, mas apenas para  server, não retorna para o client
+                .asRuntimeException().run {
+                    responseObserver?.onError(this)
+                }
+        }
+
 
         val response = CalculaFreteResponse.newBuilder() // grpc usa muito o builder
             .setCep(request?.cep)
-            .setValor(Random.nextDouble(from = 0.00, until = 150.00))
+            .setValor(valor)
             .build()
 
 
