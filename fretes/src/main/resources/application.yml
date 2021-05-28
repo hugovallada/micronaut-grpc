@@ -1,3 +1,18 @@
 micronaut:
   application:
     name: fretes
+
+grpc:
+  server:
+    health:
+      enabled: true # é true por default, poderia omitir
+
+
+endpoints:
+#  all:
+#    port: 8085
+#    sensitive: true
+  health:
+    enabled: true
+    sensitive: true
+    details-visible: 'ANONYMOUS'
